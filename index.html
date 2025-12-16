@@ -3,31 +3,87 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Draft Lobby</title>
+<title>Draft Lobby CMIM</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px;}
-  h1 { color: #4caf50; }
+  /* Reset e body */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url('cmim.png') center/cover no-repeat;
+    opacity: 0.1; /* transparência da imagem */
+    z-index: -1;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Navbar */
+  nav {
+    background: #000;
+    color: #fff;
+    padding: 15px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+
+  /* Conteúdo principal */
+  main {
+    flex: 1;
+    padding: 20px;
+    text-align: center;
+  }
+
+  h1 { color: #4caf50; margin-bottom: 15px; }
+
   input, select, button { margin: 5px; padding: 5px; }
-  .playerInput { display: flex; gap: 5px; margin-bottom: 5px; }
+
+  .playerInput { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; justify-content: center; }
+  label { font-size: 14px; color: #000; margin-left: 3px; }
+  button { cursor: pointer; background: #4caf50; border: none; color: #fff; padding: 7px 15px; border-radius: 5px; transition: 0.2s; }
+  button:hover { background: #43a047; }
+
   .links { margin-top: 20px; }
   a { color: #4caf50; text-decoration: none; margin-bottom: 5px; display:block; }
+
+  footer {
+    background: #000;
+    color: #fff;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 14px;
+  }
 </style>
 </head>
 <body>
 
+<nav>CMIM Draft Lobby</nav>
+
+<main>
 <h1>Lobby de Draft</h1>
 
 <div id="playerForm"></div>
 
+<p>Escolha dois capitães (mesma lane recomendada):</p>
+
 <button id="startDraftBtn">Iniciar Draft</button>
 
 <div class="links" id="draftLinks"></div>
+</main>
+
+<footer>CMIM © 2025 | Todos os direitos reservados</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
 import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDBBBrCIRHYE4G4KpTf-GDY4gwWJUMhltI",
   authDomain: "selecao-3d8f3.firebaseapp.com",
@@ -44,7 +100,7 @@ const db = getFirestore(app);
 let players = [];
 const laneSlots = { top:2, jungle:2, mid:2, adc:2, support:2 };
 
-// Cria inputs fixos
+// Criação do formulário de jogadores
 const formDiv = document.getElementById("playerForm");
 Object.keys(laneSlots).forEach(lane => {
   for(let i=1;i<=laneSlots[lane];i++){
@@ -56,15 +112,33 @@ Object.keys(laneSlots).forEach(lane => {
         <option value="S">S</option>
         <option value="A+">A+</option>
         <option value="A">A</option>
+        <option value="A-">A-</option>
         <option value="B">B</option>
         <option value="C">C</option>
+        <option value="D">D</option>
+        <option value="E">E</option>
+        <option value="F">F</option>
       </select>
+      <input type="checkbox" name="captain" value="${lane}-${i}" id="${lane}-${i}-captain">
+      <label for="${lane}-${i}-captain">Capitão</label>
     `;
     formDiv.appendChild(div);
   }
 });
 
-// Função que coleta players
+// Limita seleção de capitães para 2
+const captainCheckboxes = document.querySelectorAll('input[name="captain"]');
+captainCheckboxes.forEach(box => {
+  box.addEventListener('change', () => {
+    const checked = document.querySelectorAll('input[name="captain"]:checked');
+    if (checked.length > 2) {
+      box.checked = false;
+      alert("Só é permitido escolher 2 capitães!");
+    }
+  });
+});
+
+// Coleta players
 function collectPlayers() {
   players = [];
   let valid = true;
@@ -81,23 +155,33 @@ function collectPlayers() {
   return valid;
 }
 
-// Seleção automática dos capitães
-function selectCaptains(players) {
-  const tierOrder = {S:1, "A+":2, A:3, B:4, C:5};
-  const sorted = [...players].sort((a,b)=> tierOrder[a.tier]-tierOrder[b.tier]);
-  return [sorted[0].name, sorted[1].name];
+// Coleta capitães
+function collectCaptains() {
+  const checked = Array.from(document.querySelectorAll('input[name="captain"]:checked'));
+  if(checked.length !== 2) return null; 
+  return checked.map(c => {
+    const [lane, i] = c.value.split('-');
+    return document.getElementById(`${lane}-${i}-name`).value.trim();
+  });
 }
 
-// Função principal
+// Iniciar draft
 async function startDraft() {
   if(!collectPlayers()) return alert("Preencha todos os nomes dos players!");
-  const [capA, capB] = selectCaptains(players);
+  const captains = collectCaptains();
+  if(!captains) return alert("Escolha exatamente dois capitães!");
+
+  const tierOrder = {S:1, "A+":2, A:3, "A-":4, B:5, C:6, D:7, E:8, F:9};
+  const capObjs = captains.map(name => players.find(p => p.name === name));
+  let [capA, capB] = capObjs;
+  if(tierOrder[capA.tier] > tierOrder[capB.tier]) [capA, capB] = [capB, capA];
+
   const draftID = Math.random().toString(36).substr(2,8);
   const draftRef = doc(db, "drafts", draftID);
 
   await setDoc(draftRef, {
     players,
-    captains: [capA, capB],
+    captains: [capA.name, capB.name],
     teams: {A: [], B: []},
     currentPick: "A",
     started: false,
@@ -106,15 +190,14 @@ async function startDraft() {
 
   const linksDiv = document.getElementById("draftLinks");
   linksDiv.innerHTML = `
-    <p>Capitães selecionados: ${capA} e ${capB}</p>
+    <p>Capitães selecionados: ${capA.name} (Time A) e ${capB.name} (Time B)</p>
     <a href="draft.html?draft=${draftID}&team=A" target="_blank">Entrar como Time A</a>
     <a href="draft.html?draft=${draftID}&team=B" target="_blank">Entrar como Time B</a>
   `;
 }
 
-// Adiciona evento ao botão
 document.getElementById("startDraftBtn").addEventListener("click", startDraft);
-
 </script>
+
 </body>
 </html>

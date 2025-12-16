@@ -19,7 +19,6 @@ body::before {
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #fff;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -42,8 +41,23 @@ main {
   text-align: center;
 }
 
-#status { font-size: 18px; margin-bottom: 10px; }
-#timer { font-size: 26px; margin: 15px 0; color: #ff5722; font-weight: bold; }
+#status {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+#status.finished {
+  font-size: 26px;
+  font-weight: bold;
+  color: #4caf50;
+}
+
+#timer {
+  font-size: 26px;
+  margin: 15px 0;
+  color: #ff5722;
+  font-weight: bold;
+}
 
 #startBtn {
   padding: 10px 25px;
@@ -53,6 +67,14 @@ main {
   font-size: 16px;
   border-radius: 10px;
   cursor: pointer;
+}
+
+#playersPool {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 30px;
 }
 
 .playerCard {
@@ -70,14 +92,6 @@ main {
   cursor: not-allowed;
 }
 
-#playersPool {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 30px;
-}
-
 #teams {
   display: flex;
   justify-content: center;
@@ -90,10 +104,21 @@ main {
   border-radius: 12px;
   border: 2px solid #4caf50;
   background: #fff;
+  transition: .3s;
 }
 
 .teamBox.active {
   box-shadow: 0 0 25px rgba(255,87,34,.8);
+}
+
+.teamBox.finished {
+  box-shadow: 0 0 35px rgba(76,175,80,.9);
+  animation: pulse 1.2s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.04); }
 }
 
 .teamPlayer {
@@ -106,6 +131,13 @@ main {
 
 .teamPlayer.capitao {
   background: #ffeb3b;
+}
+
+footer {
+  background: #000;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
 }
 </style>
 </head>
@@ -158,7 +190,16 @@ let timerInterval;
 let timeLeft = 30;
 let lastPick = null;
 
-/* TIMER */
+/* SONS */
+const clickSound = new Audio("click.mp3");
+const pickSound = new Audio("pick.mp3");
+const finishSound = new Audio("finish.mp3");
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  document.getElementById("timer").textContent = "";
+}
+
 function startTimer(team) {
   clearInterval(timerInterval);
   timeLeft = 30;
@@ -166,7 +207,7 @@ function startTimer(team) {
   timerInterval = setInterval(async () => {
     const snap = await getDoc(draftRef);
     const draft = snap.data();
-    if (!draft.started || draft.currentPick !== team) return;
+    if (!draft.started || draft.finished || draft.currentPick !== team) return;
 
     document.getElementById("timer").textContent =
       `Tempo do Time ${team}: ${timeLeft}s`;
@@ -186,91 +227,81 @@ function sortLane(arr) {
   );
 }
 
-/* PICK COM LANE ESPELHADA */
 async function pickPlayer(name) {
   const snap = await getDoc(draftRef);
   const draft = snap.data();
-  if (!draft.started || draft.currentPick !== myTeam) return;
+  if (!draft.started || draft.finished || draft.currentPick !== myTeam) return;
 
-  // Player escolhido
+  pickSound.play();
+
   const picked = draft.players.find(p => p.name === name);
   if (!picked) return;
 
   const lane = picked.lane;
   const otherTeam = myTeam === "A" ? "B" : "A";
 
-  // Outro player da mesma lane
   const mirrored = draft.players.find(
     p => p.lane === lane && p.name !== name
   );
 
-  // Remove ambos do pool
   draft.players = draft.players.filter(
     p => p.name !== name && p.lane !== lane
   );
 
-  // Adiciona aos times
   draft.teams[myTeam].push(picked);
+  if (mirrored) draft.teams[otherTeam].push(mirrored);
 
-  if (mirrored) {
-    draft.teams[otherTeam].push(mirrored);
+  if (draft.players.length === 0) {
+    draft.finished = true;
+    stopTimer();
+    finishSound.play();
+  } else {
+    draft.currentPick = otherTeam;
   }
-
-  // Troca turno
-  draft.currentPick = otherTeam;
 
   await updateDoc(draftRef, draft);
 }
 
-/* RENDER */
 function renderDraft(draft) {
 
-  /* GARANTE CAPITÃES FORA DO POOL */
   ["A","B"].forEach((t,i)=>{
-    const capName = draft.captains[i];
-
-    draft.players = draft.players.filter(p=>p.name !== capName);
-
-    if (!draft.teams[t].some(p=>p.name === capName)) {
-      draft.teams[t].unshift({
-        name: capName,
-        lane: "cap",
-        tier: "CAP"
-      });
+    const cap = draft.captains[i];
+    draft.players = draft.players.filter(p=>p.name!==cap);
+    if (!draft.teams[t].some(p=>p.name===cap)) {
+      draft.teams[t].unshift({ name: cap, lane:"cap", tier:"CAP" });
     }
   });
-
   updateDoc(draftRef, draft);
 
-  /* STATUS */
-  if (!draft.started) {
+  const status = document.getElementById("status");
+  if (draft.finished) {
+    status.textContent = "TIMES DEFINIDOS";
+    status.classList.add("finished");
+  } else if (!draft.started) {
     const ready = draft.playersStarted || [];
-    document.getElementById("status").textContent =
-      `Prontos: ${ready.join(" e ") || "nenhum"}`;
+    status.textContent = `Prontos: ${ready.join(" e ") || "nenhum"}`;
   } else {
-    document.getElementById("status").textContent =
-      `Vez do Time ${draft.currentPick}`;
+    status.textContent = `Vez do Time ${draft.currentPick}`;
   }
 
-  /* POOL */
   const pool = document.getElementById("playersPool");
   pool.innerHTML = "";
-
   draft.players.forEach(p=>{
     const div = document.createElement("div");
     div.className = "playerCard";
-    if (draft.currentPick !== myTeam)
+    if (draft.currentPick !== myTeam || draft.finished)
       div.classList.add("disabled");
-
     div.innerHTML = `<strong>${p.name}</strong><br>${p.lane} | ${p.tier}`;
     div.onclick = ()=>pickPlayer(p.name);
     pool.appendChild(div);
   });
 
-  /* TIMES */
   ["A","B"].forEach(t=>{
     const box = document.getElementById("team"+t);
+    const teamBox = document.getElementById("teamBox"+t);
     box.innerHTML = "";
+    if (draft.finished) teamBox.classList.add("finished");
+
     sortLane(draft.teams[t]).forEach(p=>{
       const d = document.createElement("div");
       d.className = "teamPlayer";
@@ -280,8 +311,7 @@ function renderDraft(draft) {
     });
   });
 
-  /* TIMER */
-  if (draft.started && draft.currentPick !== lastPick) {
+  if (draft.started && !draft.finished && draft.currentPick !== lastPick) {
     lastPick = draft.currentPick;
     startTimer(draft.currentPick);
   }
@@ -290,8 +320,8 @@ function renderDraft(draft) {
   document.getElementById("teamBoxB").classList.toggle("active", draft.currentPick==="B");
 }
 
-/* START */
 document.getElementById("startBtn").onclick = async () => {
+  clickSound.play();
   const snap = await getDoc(draftRef);
   const draft = snap.data();
 

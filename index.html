@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draft Lobby</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #1e1e1e; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px;}
+  h1 { color: #4caf50; }
+  input, select, button { margin: 5px; padding: 5px; }
+  .playerInput { display: flex; gap: 5px; margin-bottom: 5px; }
+  .links { margin-top: 20px; }
+  a { color: #4caf50; text-decoration: none; margin-bottom: 5px; display:block; }
+</style>
+</head>
+<body>
+
+<h1>Lobby de Draft</h1>
+
+<div id="playerForm"></div>
+
+<button id="startDraftBtn">Iniciar Draft</button>
+
+<div class="links" id="draftLinks"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDBBBrCIRHYE4G4KpTf-GDY4gwWJUMhltI",
+  authDomain: "selecao-3d8f3.firebaseapp.com",
+  projectId: "selecao-3d8f3",
+  storageBucket: "selecao-3d8f3.appspot.com",
+  messagingSenderId: "1074353598922",
+  appId: "1:1074353598922:web:7e6b6a130fd54397819f33",
+  measurementId: "G-ZM1ZCH82CG"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let players = [];
+const laneSlots = { top:2, jungle:2, mid:2, adc:2, support:2 };
+
+// Cria inputs fixos
+const formDiv = document.getElementById("playerForm");
+Object.keys(laneSlots).forEach(lane => {
+  for(let i=1;i<=laneSlots[lane];i++){
+    const div = document.createElement("div");
+    div.className = "playerInput";
+    div.innerHTML = `
+      <input type="text" placeholder="${lane.toUpperCase()} ${i}" id="${lane}-${i}-name">
+      <select id="${lane}-${i}-tier">
+        <option value="S">S</option>
+        <option value="A+">A+</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+      </select>
+    `;
+    formDiv.appendChild(div);
+  }
+});
+
+// Função que coleta players
+function collectPlayers() {
+  players = [];
+  let valid = true;
+  Object.keys(laneSlots).forEach(lane => {
+    for(let i=1;i<=laneSlots[lane];i++){
+      const nameInput = document.getElementById(`${lane}-${i}-name`);
+      const tierSelect = document.getElementById(`${lane}-${i}-tier`);
+      const name = nameInput.value.trim();
+      const tier = tierSelect.value;
+      if(!name) valid = false;
+      players.push({name, lane, tier});
+    }
+  });
+  return valid;
+}
+
+// Seleção automática dos capitães
+function selectCaptains(players) {
+  const tierOrder = {S:1, "A+":2, A:3, B:4, C:5};
+  const sorted = [...players].sort((a,b)=> tierOrder[a.tier]-tierOrder[b.tier]);
+  return [sorted[0].name, sorted[1].name];
+}
+
+// Função principal
+async function startDraft() {
+  if(!collectPlayers()) return alert("Preencha todos os nomes dos players!");
+  const [capA, capB] = selectCaptains(players);
+  const draftID = Math.random().toString(36).substr(2,8);
+  const draftRef = doc(db, "drafts", draftID);
+
+  await setDoc(draftRef, {
+    players,
+    captains: [capA, capB],
+    teams: {A: [], B: []},
+    currentPick: "A",
+    started: false,
+    createdAt: serverTimestamp()
+  });
+
+  const linksDiv = document.getElementById("draftLinks");
+  linksDiv.innerHTML = `
+    <p>Capitães selecionados: ${capA} e ${capB}</p>
+    <a href="draft.html?draft=${draftID}&team=A" target="_blank">Entrar como Time A</a>
+    <a href="draft.html?draft=${draftID}&team=B" target="_blank">Entrar como Time B</a>
+  `;
+}
+
+// Adiciona evento ao botão
+document.getElementById("startDraftBtn").addEventListener("click", startDraft);
+
+</script>
+</body>
+</html>

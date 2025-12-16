@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draft CMIM</title>
+<style>
+  /* Reset e body */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url('cmim.png') center/cover no-repeat;
+    opacity: 0.1;
+    z-index: -1;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Navbar */
+  nav {
+    background: #000;
+    color: #fff;
+    padding: 15px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+
+  /* Conteúdo principal */
+  main {
+    flex: 1;
+    padding: 20px;
+    text-align: center;
+    background-color: rgba(255,255,255,0.85);
+    border-radius: 10px;
+    margin: 15px;
+  }
+
+  h1 { color: #4caf50; margin-bottom: 10px; }
+
+  #status { font-size: 18px; margin-bottom: 15px; }
+
+  #startBtn {
+    padding: 10px 20px;
+    background: #4caf50;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+  }
+
+  #startBtn:hover { transform: scale(1.05); }
+
+  #timer {
+    font-size: 24px;
+    margin: 15px 0;
+    color: #ff5722;
+  }
+
+  #playersPool {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+
+  .playerCard {
+    background: #f1f1f1;
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    width: 180px;
+    transition: transform 0.2s, opacity 0.2s;
+    color: #000;
+  }
+
+  .playerCard.disabled { opacity: 0.5; cursor: not-allowed; }
+  .playerCard.capitao { border-color: #ffeb3b; }
+  .playerCard:hover:not(.disabled) { transform: scale(1.05); }
+
+  #teams {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 30px;
+  }
+
+  .teamBox {
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    padding: 15px;
+    width: 240px;
+    min-height: 200px;
+    transition: box-shadow 0.3s;
+    background: #fff;
+  }
+
+  .teamBox.active { box-shadow: 0 0 15px #ff5722; }
+  .teamBox h3 { margin-bottom: 10px; color: #4caf50; }
+
+  .teamPlayer {
+    background: #e0e0e0;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: #000;
+  }
+
+  .teamPlayer.capitao { background: #ffeb3b; color: #000; }
+
+  .lane-tier { font-size: 12px; color: #555; }
+
+  /* Footer */
+  footer {
+    background: #000;
+    color: #fff;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  /* Animação de início */
+  @keyframes startAnimation {
+    0% { background-color: rgba(255,255,255,0.85); }
+    50% { background-color: #4caf50; }
+    100% { background-color: rgba(255,255,255,0.85); }
+  }
+</style>
+</head>
+<body>
+
+<nav>CMIM Draft</nav>
+
+<main>
+<h1>Draft</h1>
+<p id="status">Aguardando ambos os capitães iniciarem...</p>
+<button id="startBtn">Iniciar Draft</button>
+<div id="timer"></div>
+
+<h2>Jogadores disponíveis</h2>
+<div id="playersPool"></div>
+
+<div id="teams">
+  <div class="teamBox" id="teamBoxA">
+    <h3>Time A</h3>
+    <div id="teamA"></div>
+  </div>
+  <div class="teamBox" id="teamBoxB">
+    <h3>Time B</h3>
+    <div id="teamB"></div>
+  </div>
+</div>
+
+<!-- Música -->
+<audio id="bgMusic" src="musica.mp3" loop></audio>
+</main>
+
+<footer>CMIM © 2025 | Todos os direitos reservados</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
+
+// Config Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDBBBrCIRHYE4G4KpTf-GDY4gwWJUMhltI",
+  authDomain: "selecao-3d8f3.firebaseapp.com",
+  projectId: "selecao-3d8f3",
+  storageBucket: "selecao-3d8f3.appspot.com",
+  messagingSenderId: "1074353598922",
+  appId: "1:1074353598922:web:7e6b6a130fd54397819f33",
+  measurementId: "G-ZM1ZCH82CG"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Parâmetros URL
+const urlParams = new URLSearchParams(window.location.search);
+const draftID = urlParams.get("draft");
+const myTeam = urlParams.get("team");
+
+let draftRef = doc(db, "drafts", draftID);
+let timerInterval;
+let timeLeft = 30;
+let activeTeam = null;
+
+// Música
+const music = document.getElementById('bgMusic');
+music.volume = 0.5;
+
+// Função para renderizar draft
+function renderDraft(draft) {
+  const poolDiv = document.getElementById("playersPool");
+  poolDiv.innerHTML = '';
+  draft.players.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "playerCard";
+    div.innerHTML = `<strong>${p.name}</strong><div class="lane-tier">${p.lane} | Tier: ${p.tier}</div>`;
+    if(draft.captains.includes(p.name)) div.classList.add("capitao");
+    if(!draft.started || draft.currentPick !== myTeam) div.classList.add("disabled");
+    div.onclick = () => { if(draft.started && draft.currentPick === myTeam) pickPlayer(p.name, p.lane); };
+    poolDiv.appendChild(div);
+  });
+
+  // Atualiza times
+  const teamAdiv = document.getElementById("teamA");
+  const teamBdiv = document.getElementById("teamB");
+  teamAdiv.innerHTML = '';
+  teamBdiv.innerHTML = '';
+  draft.teams.A.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "teamPlayer";
+    if(draft.captains[0] === p.name) div.classList.add("capitao");
+    div.textContent = `${p.name} (${p.lane} | Tier: ${p.tier})`;
+    teamAdiv.appendChild(div);
+  });
+  draft.teams.B.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "teamPlayer";
+    if(draft.captains[1] === p.name) div.classList.add("capitao");
+    div.textContent = `${p.name} (${p.lane} | Tier: ${p.tier})`;
+    teamBdiv.appendChild(div);
+  });
+
+  document.getElementById("status").textContent = !draft.started 
+    ? "Aguardando ambos os capitães iniciarem..." 
+    : `É a vez do Time ${draft.currentPick}`;
+
+  document.getElementById("teamBoxA").classList.toggle("active", draft.currentPick === "A");
+  document.getElementById("teamBoxB").classList.toggle("active", draft.currentPick === "B");
+}
+
+// Função de pick com bloqueio de lane
+async function pickPlayer(name, lane) {
+  const draftSnap = await getDoc(draftRef);
+  const draft = draftSnap.data();
+  if(draft.currentPick !== myTeam || !draft.started) return;
+
+  const pickedPlayer = draft.players.find(p => p.name === name);
+  draft.teams[myTeam].push({name, lane, tier: pickedPlayer.tier});
+  draft.players = draft.players.filter(p => p.name !== name);
+
+  const otherTeam = myTeam === "A" ? "B" : "A";
+  const sameLanePlayers = draft.players.filter(p => p.lane === lane);
+  sameLanePlayers.forEach(p => {
+    draft.teams[otherTeam].push({name: p.name, lane: p.lane, tier: p.tier});
+    draft.players = draft.players.filter(pl => pl.name !== p.name);
+  });
+
+  draft.currentPick = otherTeam;
+  await updateDoc(draftRef, draft);
+  startTimer(draft.currentPick);
+}
+
+// Timer sincronizado
+function startTimer(currentPick) {
+  clearInterval(timerInterval);
+  if(activeTeam !== currentPick) { timeLeft = 30; activeTeam = currentPick; }
+
+  timerInterval = setInterval(async () => {
+    const draftSnap = await getDoc(draftRef);
+    const draft = draftSnap.data();
+    if(!draft.started) return;
+
+    document.getElementById("timer").textContent = `Tempo restante do Time ${draft.currentPick}: ${timeLeft}s`;
+
+    if(draft.currentPick !== activeTeam) {
+      clearInterval(timerInterval);
+      activeTeam = draft.currentPick;
+      timeLeft = 30;
+      startTimer(activeTeam);
+      return;
+    }
+
+    timeLeft--;
+    if(timeLeft < 0) {
+      clearInterval(timerInterval);
+      draft.currentPick = draft.currentPick === "A" ? "B" : "A";
+      await updateDoc(draftRef, draft);
+      startTimer(draft.currentPick);
+    }
+  }, 1000);
+}
+
+// Botão iniciar draft e tocar música
+document.getElementById("startBtn").onclick = async () => {
+  if(music.paused) music.play();
+
+  const draftSnap = await getDoc(draftRef);
+  let draft = draftSnap.data();
+  if(!draft.playersStarted) draft.playersStarted = [];
+  if(!draft.playersStarted.includes(myTeam)) draft.playersStarted.push(myTeam);
+
+  if(draft.playersStarted.length === 2) {
+    draft.started = true;
+    draft.currentPick = "A";
+    await updateDoc(draftRef, draft);
+
+    document.body.style.animation = "startAnimation 0.8s";
+    setTimeout(() => document.body.style.animation = "", 800);
+
+    startTimer(draft.currentPick);
+  } else {
+    await updateDoc(draftRef, { playersStarted: arrayUnion(myTeam) });
+  }
+};
+
+// Atualização em tempo real
+onSnapshot(draftRef, (snapshot) => {
+  const draft = snapshot.data();
+  renderDraft(draft);
+});
+</script>
+</body>
+</html>

@@ -4,156 +4,123 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Draft CMIM</title>
+
 <style>
-  /* Reset e body */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: url('cmim.png') center/cover no-repeat;
-    opacity: 0.1;
-    z-index: -1;
-  }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url('cmim.png') center/cover no-repeat;
+  opacity: 0.08;
+  z-index: -1;
+}
 
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #fff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-  /* Navbar */
-  nav {
-    background: #000;
-    color: #fff;
-    padding: 15px 20px;
-    font-size: 18px;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-  }
+nav {
+  background: #000;
+  color: #fff;
+  padding: 15px 20px;
+  font-size: 18px;
+  font-weight: bold;
+}
 
-  /* Conteúdo principal */
-  main {
-    flex: 1;
-    padding: 20px;
-    text-align: center;
-    background-color: rgba(255,255,255,0.85);
-    border-radius: 10px;
-    margin: 15px;
-  }
+main {
+  flex: 1;
+  padding: 20px;
+  margin: 15px;
+  background: rgba(255,255,255,.95);
+  border-radius: 12px;
+  text-align: center;
+}
 
-  h1 { color: #4caf50; margin-bottom: 10px; }
+#status { font-size: 18px; margin-bottom: 10px; }
+#timer { font-size: 26px; margin: 15px 0; color: #ff5722; font-weight: bold; }
 
-  #status { font-size: 18px; margin-bottom: 15px; }
+#startBtn {
+  padding: 10px 25px;
+  background: linear-gradient(135deg,#4caf50,#2e7d32);
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
 
-  #startBtn {
-    padding: 10px 20px;
-    background: #4caf50;
-    border: none;
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    transition: transform 0.2s;
-  }
+.playerCard {
+  width: 190px;
+  padding: 12px;
+  background: #f3f3f3;
+  border-radius: 10px;
+  border: 2px solid #4caf50;
+  cursor: pointer;
+  transition: .2s;
+}
 
-  #startBtn:hover { transform: scale(1.05); }
+.playerCard.disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
 
-  #timer {
-    font-size: 24px;
-    margin: 15px 0;
-    color: #ff5722;
-  }
+#playersPool {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
 
-  #playersPool {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 30px;
-  }
+#teams {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
 
-  .playerCard {
-    background: #f1f1f1;
-    border: 2px solid #4caf50;
-    border-radius: 8px;
-    padding: 10px 15px;
-    cursor: pointer;
-    width: 180px;
-    transition: transform 0.2s, opacity 0.2s;
-    color: #000;
-  }
+.teamBox {
+  width: 260px;
+  padding: 15px;
+  border-radius: 12px;
+  border: 2px solid #4caf50;
+  background: #fff;
+}
 
-  .playerCard.disabled { opacity: 0.5; cursor: not-allowed; }
-  .playerCard.capitao { border-color: #ffeb3b; }
-  .playerCard:hover:not(.disabled) { transform: scale(1.05); }
+.teamBox.active {
+  box-shadow: 0 0 25px rgba(255,87,34,.8);
+}
 
-  #teams {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    margin-bottom: 30px;
-  }
+.teamPlayer {
+  background: #e0e0e0;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  font-weight: bold;
+}
 
-  .teamBox {
-    border: 2px solid #4caf50;
-    border-radius: 8px;
-    padding: 15px;
-    width: 240px;
-    min-height: 200px;
-    transition: box-shadow 0.3s;
-    background: #fff;
-  }
-
-  .teamBox.active { box-shadow: 0 0 15px #ff5722; }
-  .teamBox h3 { margin-bottom: 10px; color: #4caf50; }
-
-  .teamPlayer {
-    background: #e0e0e0;
-    padding: 5px 10px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-    font-weight: bold;
-    color: #000;
-  }
-
-  .teamPlayer.capitao { background: #ffeb3b; color: #000; }
-
-  .lane-tier { font-size: 12px; color: #555; }
-
-  /* Footer */
-  footer {
-    background: #000;
-    color: #fff;
-    padding: 10px 20px;
-    text-align: center;
-    font-size: 14px;
-  }
-
-  /* Animação de início */
-  @keyframes startAnimation {
-    0% { background-color: rgba(255,255,255,0.85); }
-    50% { background-color: #4caf50; }
-    100% { background-color: rgba(255,255,255,0.85); }
-  }
+.teamPlayer.capitao {
+  background: #ffeb3b;
+}
 </style>
 </head>
+
 <body>
 
 <nav>CMIM Draft</nav>
 
 <main>
 <h1>Draft</h1>
-<p id="status">Aguardando ambos os capitães iniciarem...</p>
-<button id="startBtn">Iniciar Draft</button>
+<p id="status">Aguardando confirmação dos capitães...</p>
+<button id="startBtn">Confirmar Pronto</button>
 <div id="timer"></div>
 
-<h2>Jogadores disponíveis</h2>
+<h2>Jogadores Disponíveis</h2>
 <div id="playersPool"></div>
 
 <div id="teams">
@@ -166,166 +133,183 @@
     <div id="teamB"></div>
   </div>
 </div>
-
-<!-- Música -->
-<audio id="bgMusic" src="musica.mp3" loop></audio>
 </main>
 
-<footer>CMIM © 2025 | Todos os direitos reservados</footer>
+<footer>CMIM © 2025</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
 import { getFirestore, doc, getDoc, updateDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
-// Config Firebase
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyDBBBrCIRHYE4G4KpTf-GDY4gwWJUMhltI",
   authDomain: "selecao-3d8f3.firebaseapp.com",
-  projectId: "selecao-3d8f3",
-  storageBucket: "selecao-3d8f3.appspot.com",
-  messagingSenderId: "1074353598922",
-  appId: "1:1074353598922:web:7e6b6a130fd54397819f33",
-  measurementId: "G-ZM1ZCH82CG"
-};
-const app = initializeApp(firebaseConfig);
+  projectId: "selecao-3d8f3"
+});
+
 const db = getFirestore(app);
 
-// Parâmetros URL
-const urlParams = new URLSearchParams(window.location.search);
-const draftID = urlParams.get("draft");
-const myTeam = urlParams.get("team");
+const params = new URLSearchParams(window.location.search);
+const draftRef = doc(db, "drafts", params.get("draft"));
+const myTeam = params.get("team");
 
-let draftRef = doc(db, "drafts", draftID);
+const laneOrder = ["cap","top","jg","mid","adc","sup"];
 let timerInterval;
 let timeLeft = 30;
-let activeTeam = null;
+let lastPick = null;
 
-// Música
-const music = document.getElementById('bgMusic');
-music.volume = 0.1;
-
-// Função para renderizar draft
-function renderDraft(draft) {
-  const poolDiv = document.getElementById("playersPool");
-  poolDiv.innerHTML = '';
-  draft.players.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "playerCard";
-    div.innerHTML = `<strong>${p.name}</strong><div class="lane-tier">${p.lane} | Tier: ${p.tier}</div>`;
-    if(draft.captains.includes(p.name)) div.classList.add("capitao");
-    if(!draft.started || draft.currentPick !== myTeam) div.classList.add("disabled");
-    div.onclick = () => { if(draft.started && draft.currentPick === myTeam) pickPlayer(p.name, p.lane); };
-    poolDiv.appendChild(div);
-  });
-
-  // Atualiza times
-  const teamAdiv = document.getElementById("teamA");
-  const teamBdiv = document.getElementById("teamB");
-  teamAdiv.innerHTML = '';
-  teamBdiv.innerHTML = '';
-  draft.teams.A.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "teamPlayer";
-    if(draft.captains[0] === p.name) div.classList.add("capitao");
-    div.textContent = `${p.name} (${p.lane} | Tier: ${p.tier})`;
-    teamAdiv.appendChild(div);
-  });
-  draft.teams.B.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "teamPlayer";
-    if(draft.captains[1] === p.name) div.classList.add("capitao");
-    div.textContent = `${p.name} (${p.lane} | Tier: ${p.tier})`;
-    teamBdiv.appendChild(div);
-  });
-
-  document.getElementById("status").textContent = !draft.started 
-    ? "Aguardando ambos os capitães iniciarem..." 
-    : `É a vez do Time ${draft.currentPick}`;
-
-  document.getElementById("teamBoxA").classList.toggle("active", draft.currentPick === "A");
-  document.getElementById("teamBoxB").classList.toggle("active", draft.currentPick === "B");
-}
-
-// Função de pick com bloqueio de lane
-async function pickPlayer(name, lane) {
-  const draftSnap = await getDoc(draftRef);
-  const draft = draftSnap.data();
-  if(draft.currentPick !== myTeam || !draft.started) return;
-
-  const pickedPlayer = draft.players.find(p => p.name === name);
-  draft.teams[myTeam].push({name, lane, tier: pickedPlayer.tier});
-  draft.players = draft.players.filter(p => p.name !== name);
-
-  const otherTeam = myTeam === "A" ? "B" : "A";
-  const sameLanePlayers = draft.players.filter(p => p.lane === lane);
-  sameLanePlayers.forEach(p => {
-    draft.teams[otherTeam].push({name: p.name, lane: p.lane, tier: p.tier});
-    draft.players = draft.players.filter(pl => pl.name !== p.name);
-  });
-
-  draft.currentPick = otherTeam;
-  await updateDoc(draftRef, draft);
-  startTimer(draft.currentPick);
-}
-
-// Timer sincronizado
-function startTimer(currentPick) {
+/* TIMER */
+function startTimer(team) {
   clearInterval(timerInterval);
-  if(activeTeam !== currentPick) { timeLeft = 30; activeTeam = currentPick; }
+  timeLeft = 30;
 
   timerInterval = setInterval(async () => {
-    const draftSnap = await getDoc(draftRef);
-    const draft = draftSnap.data();
-    if(!draft.started) return;
+    const snap = await getDoc(draftRef);
+    const draft = snap.data();
+    if (!draft.started || draft.currentPick !== team) return;
 
-    document.getElementById("timer").textContent = `Tempo restante do Time ${draft.currentPick}: ${timeLeft}s`;
-
-    if(draft.currentPick !== activeTeam) {
-      clearInterval(timerInterval);
-      activeTeam = draft.currentPick;
-      timeLeft = 30;
-      startTimer(activeTeam);
-      return;
-    }
+    document.getElementById("timer").textContent =
+      `Tempo do Time ${team}: ${timeLeft}s`;
 
     timeLeft--;
-    if(timeLeft < 0) {
-      clearInterval(timerInterval);
-      draft.currentPick = draft.currentPick === "A" ? "B" : "A";
+
+    if (timeLeft < 0) {
+      draft.currentPick = team === "A" ? "B" : "A";
       await updateDoc(draftRef, draft);
-      startTimer(draft.currentPick);
     }
   }, 1000);
 }
 
-// Botão iniciar draft e tocar música
+function sortLane(arr) {
+  return [...arr].sort(
+    (a,b)=>laneOrder.indexOf(a.lane)-laneOrder.indexOf(b.lane)
+  );
+}
+
+/* PICK COM LANE ESPELHADA */
+async function pickPlayer(name) {
+  const snap = await getDoc(draftRef);
+  const draft = snap.data();
+  if (!draft.started || draft.currentPick !== myTeam) return;
+
+  // Player escolhido
+  const picked = draft.players.find(p => p.name === name);
+  if (!picked) return;
+
+  const lane = picked.lane;
+  const otherTeam = myTeam === "A" ? "B" : "A";
+
+  // Outro player da mesma lane
+  const mirrored = draft.players.find(
+    p => p.lane === lane && p.name !== name
+  );
+
+  // Remove ambos do pool
+  draft.players = draft.players.filter(
+    p => p.name !== name && p.lane !== lane
+  );
+
+  // Adiciona aos times
+  draft.teams[myTeam].push(picked);
+
+  if (mirrored) {
+    draft.teams[otherTeam].push(mirrored);
+  }
+
+  // Troca turno
+  draft.currentPick = otherTeam;
+
+  await updateDoc(draftRef, draft);
+}
+
+/* RENDER */
+function renderDraft(draft) {
+
+  /* GARANTE CAPITÃES FORA DO POOL */
+  ["A","B"].forEach((t,i)=>{
+    const capName = draft.captains[i];
+
+    draft.players = draft.players.filter(p=>p.name !== capName);
+
+    if (!draft.teams[t].some(p=>p.name === capName)) {
+      draft.teams[t].unshift({
+        name: capName,
+        lane: "cap",
+        tier: "CAP"
+      });
+    }
+  });
+
+  updateDoc(draftRef, draft);
+
+  /* STATUS */
+  if (!draft.started) {
+    const ready = draft.playersStarted || [];
+    document.getElementById("status").textContent =
+      `Prontos: ${ready.join(" e ") || "nenhum"}`;
+  } else {
+    document.getElementById("status").textContent =
+      `Vez do Time ${draft.currentPick}`;
+  }
+
+  /* POOL */
+  const pool = document.getElementById("playersPool");
+  pool.innerHTML = "";
+
+  draft.players.forEach(p=>{
+    const div = document.createElement("div");
+    div.className = "playerCard";
+    if (draft.currentPick !== myTeam)
+      div.classList.add("disabled");
+
+    div.innerHTML = `<strong>${p.name}</strong><br>${p.lane} | ${p.tier}`;
+    div.onclick = ()=>pickPlayer(p.name);
+    pool.appendChild(div);
+  });
+
+  /* TIMES */
+  ["A","B"].forEach(t=>{
+    const box = document.getElementById("team"+t);
+    box.innerHTML = "";
+    sortLane(draft.teams[t]).forEach(p=>{
+      const d = document.createElement("div");
+      d.className = "teamPlayer";
+      if (draft.captains.includes(p.name)) d.classList.add("capitao");
+      d.textContent = `${p.name} (${p.lane})`;
+      box.appendChild(d);
+    });
+  });
+
+  /* TIMER */
+  if (draft.started && draft.currentPick !== lastPick) {
+    lastPick = draft.currentPick;
+    startTimer(draft.currentPick);
+  }
+
+  document.getElementById("teamBoxA").classList.toggle("active", draft.currentPick==="A");
+  document.getElementById("teamBoxB").classList.toggle("active", draft.currentPick==="B");
+}
+
+/* START */
 document.getElementById("startBtn").onclick = async () => {
-  if(music.paused) music.play();
+  const snap = await getDoc(draftRef);
+  const draft = snap.data();
 
-  const draftSnap = await getDoc(draftRef);
-  let draft = draftSnap.data();
-  if(!draft.playersStarted) draft.playersStarted = [];
-  if(!draft.playersStarted.includes(myTeam)) draft.playersStarted.push(myTeam);
+  if (!draft.playersStarted) draft.playersStarted = [];
+  if (!draft.playersStarted.includes(myTeam))
+    draft.playersStarted.push(myTeam);
 
-  if(draft.playersStarted.length === 2) {
+  if (draft.playersStarted.length === 2) {
     draft.started = true;
     draft.currentPick = "A";
     await updateDoc(draftRef, draft);
-
-    document.body.style.animation = "startAnimation 0.8s";
-    setTimeout(() => document.body.style.animation = "", 800);
-
-    startTimer(draft.currentPick);
   } else {
     await updateDoc(draftRef, { playersStarted: arrayUnion(myTeam) });
   }
 };
 
-// Atualização em tempo real
-onSnapshot(draftRef, (snapshot) => {
-  const draft = snapshot.data();
-  renderDraft(draft);
-});
+onSnapshot(draftRef, snap => renderDraft(snap.data()));
 </script>
+
 </body>
 </html>

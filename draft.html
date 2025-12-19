@@ -5,169 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Draft CMIM</title>
 
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: url('cmim.png') center/cover no-repeat;
-  opacity: 0.08;
-  z-index: -1;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-nav {
-  background: #000;
-  color: #fff;
-  padding: 15px 20px;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-main {
-  flex: 1;
-  padding: 20px;
-  margin: 15px;
-  background: rgba(255,255,255,.95);
-  border-radius: 12px;
-  text-align: center;
-}
-
-#status {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-#status.finished {
-  font-size: 26px;
-  font-weight: bold;
-  color: #4caf50;
-}
-
-#timer {
-  font-size: 26px;
-  margin: 15px 0;
-  color: #ff5722;
-  font-weight: bold;
-}
-
-#startBtn {
-  padding: 10px 25px;
-  background: linear-gradient(135deg,#4caf50,#2e7d32);
-  border: none;
-  color: #fff;
-  font-size: 16px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-#playersPool {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 30px;
-}
-
-.playerCard {
-  width: 190px;
-  padding: 12px;
-  background: #f3f3f3;
-  border-radius: 10px;
-  border: 2px solid #4caf50;
-  cursor: pointer;
-  transition: .2s;
-}
-
-.playerCard.disabled {
-  opacity: .4;
-  cursor: not-allowed;
-}
-
-#teams {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-}
-
-.teamBox {
-  width: 260px;
-  padding: 15px;
-  border-radius: 12px;
-  border: 2px solid #4caf50;
-  background: #fff;
-  transition: .3s;
-}
-
-.teamBox.active {
-  box-shadow: 0 0 25px rgba(255,87,34,.8);
-}
-
-.teamBox.finished {
-  box-shadow: 0 0 35px rgba(76,175,80,.9);
-  animation: pulse 1.2s infinite alternate;
-}
-
-@keyframes pulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.04); }
-}
-
-.teamPlayer {
-  background: #e0e0e0;
-  padding: 6px 10px;
-  margin-bottom: 6px;
-  border-radius: 6px;
-  font-weight: bold;
-}
-
-.teamPlayer.capitao {
-  background: #ffeb3b;
-}
-
-footer {
-  background: #000;
-  color: #fff;
-  padding: 10px;
-  text-align: center;
-}
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: url('cmim.png') center/cover no-repeat;
+    opacity: 0.06;
+    z-index: -1;
+  }
 </style>
 </head>
 
-<body>
+<body class="min-h-screen flex flex-col bg-gray-100 text-gray-800">
 
-<nav>CMIM Draft</nav>
+<!-- NAV -->
+<nav class="bg-black text-white px-6 py-4 text-xl font-bold">
+  CMIM Draft
+</nav>
 
-<main>
-<h1>Draft</h1>
-<p id="status">Aguardando confirmação dos capitães...</p>
-<button id="startBtn">Confirmar Pronto</button>
-<div id="timer"></div>
+<!-- MAIN -->
+<main class="flex-1 p-6 max-w-7xl mx-auto w-full">
 
-<h2>Jogadores Disponíveis</h2>
-<div id="playersPool"></div>
+  <div class="bg-white/95 rounded-2xl shadow-xl p-6 text-center">
 
-<div id="teams">
-  <div class="teamBox" id="teamBoxA">
-    <h3>Time A</h3>
-    <div id="teamA"></div>
+    <h1 class="text-3xl font-extrabold mb-2">Draft</h1>
+
+    <p id="status" class="text-lg mb-4">
+      Aguardando confirmação dos capitães...
+    </p>
+
+    <button id="startBtn"
+      class="px-6 py-3 rounded-xl font-bold text-white
+      bg-gradient-to-r from-green-500 to-green-700
+      hover:scale-105 transition">
+      Confirmar Pronto
+    </button>
+
+    <div id="timer" class="text-2xl font-bold text-orange-500 my-4"></div>
+
+    <!-- PLAYERS -->
+    <h2 class="text-2xl font-bold mt-6 mb-4">Jogadores Disponíveis</h2>
+
+    <div id="playersPool"
+      class="flex flex-wrap justify-center gap-4 mb-8">
+    </div>
+
+    <!-- TEAMS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 justify-center">
+
+      <div id="teamBoxA"
+        class="border-2 border-green-500 rounded-2xl p-4 bg-white transition">
+        <h3 class="text-xl font-bold mb-3">Time A</h3>
+        <div id="teamA" class="space-y-2"></div>
+      </div>
+
+      <div id="teamBoxB"
+        class="border-2 border-green-500 rounded-2xl p-4 bg-white transition">
+        <h3 class="text-xl font-bold mb-3">Time B</h3>
+        <div id="teamB" class="space-y-2"></div>
+      </div>
+
+    </div>
+
   </div>
-  <div class="teamBox" id="teamBoxB">
-    <h3>Time B</h3>
-    <div id="teamB"></div>
-  </div>
-</div>
 </main>
 
-<footer>CMIM © 2025</footer>
+<!-- FOOTER -->
+<footer class="bg-black text-white text-center py-3">
+  CMIM © 2025
+</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
@@ -274,9 +184,11 @@ function renderDraft(draft) {
   updateDoc(draftRef, draft);
 
   const status = document.getElementById("status");
+  status.className = "text-lg mb-4";
+
   if (draft.finished) {
     status.textContent = "TIMES DEFINIDOS";
-    status.classList.add("finished");
+    status.classList.add("text-3xl","font-extrabold","text-green-600");
   } else if (!draft.started) {
     const ready = draft.playersStarted || [];
     status.textContent = `Prontos: ${ready.join(" e ") || "nenhum"}`;
@@ -286,11 +198,18 @@ function renderDraft(draft) {
 
   const pool = document.getElementById("playersPool");
   pool.innerHTML = "";
+
   draft.players.forEach(p=>{
     const div = document.createElement("div");
-    div.className = "playerCard";
-    if (draft.currentPick !== myTeam || draft.finished)
-      div.classList.add("disabled");
+    div.className = `
+      w-44 p-3 rounded-xl border-2 border-green-500 bg-gray-100
+      cursor-pointer transition hover:scale-105 text-sm font-semibold
+    `;
+
+    if (draft.currentPick !== myTeam || draft.finished) {
+      div.classList.add("opacity-40","cursor-not-allowed");
+    }
+
     div.innerHTML = `<strong>${p.name}</strong><br>${p.lane} | ${p.tier}`;
     div.onclick = ()=>pickPlayer(p.name);
     pool.appendChild(div);
@@ -300,12 +219,19 @@ function renderDraft(draft) {
     const box = document.getElementById("team"+t);
     const teamBox = document.getElementById("teamBox"+t);
     box.innerHTML = "";
-    if (draft.finished) teamBox.classList.add("finished");
+
+    if (draft.finished) {
+      teamBox.classList.add("shadow-[0_0_30px_rgba(34,197,94,0.9)]","scale-105");
+    }
 
     sortLane(draft.teams[t]).forEach(p=>{
       const d = document.createElement("div");
-      d.className = "teamPlayer";
-      if (draft.captains.includes(p.name)) d.classList.add("capitao");
+      d.className = "bg-gray-200 rounded-lg px-3 py-1 font-bold";
+
+      if (draft.captains.includes(p.name)) {
+        d.classList.add("bg-yellow-300");
+      }
+
       d.textContent = `${p.name} (${p.lane})`;
       box.appendChild(d);
     });
@@ -316,8 +242,10 @@ function renderDraft(draft) {
     startTimer(draft.currentPick);
   }
 
-  document.getElementById("teamBoxA").classList.toggle("active", draft.currentPick==="A");
-  document.getElementById("teamBoxB").classList.toggle("active", draft.currentPick==="B");
+  document.getElementById("teamBoxA")
+    .classList.toggle("shadow-[0_0_25px_rgba(255,87,34,.8)]", draft.currentPick==="A");
+  document.getElementById("teamBoxB")
+    .classList.toggle("shadow-[0_0_25px_rgba(255,87,34,.8)]", draft.currentPick==="B");
 }
 
 document.getElementById("startBtn").onclick = async () => {

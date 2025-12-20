@@ -67,8 +67,7 @@ class="flex flex-wrap justify-center gap-5 mb-10"></div>
 
 <!-- TIME A -->
 <div id="teamBoxA"
-class="rounded-3xl p-5 bg-white/10 border border-white/10
-transition-all duration-300">
+class="rounded-3xl p-5 bg-white/10 border border-white/10 transition-all duration-300">
 <h3 class="text-2xl font-extrabold mb-4 text-green-400">
 Time A
 </h3>
@@ -77,8 +76,7 @@ Time A
 
 <!-- TIME B -->
 <div id="teamBoxB"
-class="rounded-3xl p-5 bg-white/10 border border-white/10
-transition-all duration-300">
+class="rounded-3xl p-5 bg-white/10 border border-white/10 transition-all duration-300">
 <h3 class="text-2xl font-extrabold mb-4 text-green-400">
 Time B
 </h3>
@@ -99,7 +97,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebas
 import { getFirestore, doc, getDoc, updateDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyDBBBrCIRHYE4G4KpTf-GDY4gwWJUMhltI",
+  apiKey: "AIzaSyDBBBrCIRHYE4G4pTf-GDY4gwWJUMhltI",
   authDomain: "selecao-3d8f3.firebaseapp.com",
   projectId: "selecao-3d8f3"
 });
@@ -120,12 +118,23 @@ const clickSound = new Audio("click.mp3");
 const pickSound = new Audio("pick.mp3");
 const finishSound = new Audio("finish.mp3");
 
+/* CORES POR LANE */
 const laneColors = {
   top:"border-green-400 bg-green-400/10",
   jg:"border-purple-400 bg-purple-400/10",
   mid:"border-blue-400 bg-blue-400/10",
   adc:"border-red-400 bg-red-400/10",
   sup:"border-cyan-400 bg-cyan-400/10"
+};
+
+/* CORES POR TIER */
+const tierColors = {
+  S: "text-yellow-400",
+  A: "text-emerald-400",
+  B: "text-blue-400",
+  C: "text-orange-400",
+  D: "text-red-400",
+  F: "text-zinc-400"
 };
 
 function stopTimer(){
@@ -229,7 +238,9 @@ function renderDraft(draft){
     div.innerHTML=`
       <div class="font-extrabold text-base">${p.name}</div>
       <div class="text-xs uppercase opacity-70">${p.lane}</div>
-      <div class="text-xs font-bold mt-1">Tier ${p.tier}</div>
+      <div class="text-xs font-bold mt-1 ${tierColors[p.tier] || "text-white"}">
+        Tier ${p.tier}
+      </div>
     `;
 
     div.onclick=()=>pickPlayer(p.name);
@@ -262,7 +273,12 @@ function renderDraft(draft){
 
       d.innerHTML=`
         <span>${p.name}</span>
-        <span class="text-xs uppercase">${p.lane} • ${p.tier}</span>
+        <span class="text-xs uppercase flex gap-2 items-center">
+          <span>${p.lane}</span>
+          <span class="${tierColors[p.tier] || "text-white"}">
+            • ${p.tier}
+          </span>
+        </span>
       `;
       box.appendChild(d);
     });

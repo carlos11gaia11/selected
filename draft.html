@@ -120,11 +120,11 @@ const finishSound = new Audio("finish.mp3");
 
 /* CORES POR LANE */
 const laneColors = {
-  top:"border-green-400 bg-green-400/10",
-  jungle:"border-yellow-400 bg-purple-400/10",
+  top:"border-blue-400 bg-blue-400/10",
+  jungle:"border-blue-400 bg-blue-400/10",
   mid:"border-blue-400 bg-blue-400/10",
-  adc:"border-red-400 bg-red-400/10",
-  suppport:"border-orange-400 bg-cyan-400/10"
+  adc:"border-blue-400 bg-blue-400/10",
+  suppport:"border-blue-400 bg-blue-400/10",
 };
 
 /* CORES POR TIER */
@@ -301,21 +301,38 @@ function renderDraft(draft){
     .classList.toggle("shadow-[0_0_30px_rgba(255,140,0,.8)]",draft.currentPick==="B");
 }
 
-document.getElementById("startBtn").onclick=async()=>{
+document.getElementById("startBtn").onclick = async () => {
   clickSound.play();
-  const snap=await getDoc(draftRef);
-  const draft=snap.data();
+  const snap = await getDoc(draftRef);
+  const draft = snap.data();
 
-  if(!draft.playersStarted) draft.playersStarted=[];
-  if(!draft.playersStarted.includes(myTeam))
+  if (!draft.playersStarted) draft.playersStarted = [];
+  if (!draft.playersStarted.includes(myTeam))
     draft.playersStarted.push(myTeam);
 
-  if(draft.playersStarted.length===2){
-    draft.started=true;
-    draft.currentPick="A";
-    await updateDoc(draftRef,draft);
-  }else{
-    await updateDoc(draftRef,{playersStarted:arrayUnion(myTeam)});
+  // quando os dois confirmarem
+  if (draft.playersStarted.length === 2) {
+
+    // 🔥 AQUI É O PULO DO GATO
+    draft.captains.forEach((capName, index) => {
+      const team = index === 0 ? "A" : "B";
+
+      const capPlayer = draft.players.find(p => p.name === capName);
+      if (!capPlayer) return;
+
+      // adiciona capitão no próprio time
+      draft.teams[team].push(capPlayer);
+
+      // remove do pool
+      draft.players = draft.players.filter(p => p.name !== capName);
+    });
+
+    draft.started = true;
+    draft.currentPick = "A";
+
+    await updateDoc(draftRef, draft);
+  } else {
+    await updateDoc(draftRef, { playersStarted: arrayUnion(myTeam) });
   }
 };
 

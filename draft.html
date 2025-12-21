@@ -304,7 +304,18 @@ async function pickPlayer(name){
   }
 }
 
+   
 function renderDraft(draft){
+
+  const overallA = calculateOverall(draft.teams.A);
+const overallB = calculateOverall(draft.teams.B);
+
+document.getElementById("overallA").textContent =
+  `Overall: ${overallA}`;
+
+document.getElementById("overallB").textContent =
+  `Overall: ${overallB}`;
+
 
   const status=document.getElementById("status");
   status.className="text-lg mb-6";
@@ -336,14 +347,6 @@ function renderDraft(draft){
       font-semibold text-sm
     `;
 
-    const overallA = calculateOverall(draft.teams.A);
-const overallB = calculateOverall(draft.teams.B);
-
-document.getElementById("overallA").textContent =
-  `Overall: ${overallA}`;
-
-document.getElementById("overallB").textContent =
-  `Overall: ${overallB}`;
 
     if(draft.currentPick!==myTeam||draft.finished){
       div.classList.add("opacity-40","cursor-not-allowed");
@@ -372,6 +375,8 @@ document.getElementById("overallB").textContent =
         "scale-105"
       );
     }
+
+  
 
     sortLane(draft.teams[t]).forEach(p=>{
       const d=document.createElement("div");
@@ -454,6 +459,7 @@ onSnapshot(draftRef,snap=>renderDraft(snap.data()));
 
 </body>
 </html>
+
 
 
 

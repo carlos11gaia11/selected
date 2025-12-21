@@ -56,6 +56,10 @@ CONFIRMAR PRONTO
 </button>
 
 <div id="timer" class="text-3xl font-extrabold text-orange-400 my-6"></div>
+  <div id="balanceWarning"
+class="hidden mt-4 px-6 py-3 rounded-2xl font-extrabold text-lg
+transition-all duration-300">
+</div>
 
 <h2 class="text-2xl font-bold mt-10 mb-6 tracking-wide">
 Jogadores Disponíveis
@@ -245,6 +249,60 @@ async function pickPlayer(name){
 
   await updateDoc(draftRef,draft);
 }
+  function getBalanceInfo(teamA, teamB){
+  const overallA = calculateOverall(teamA);
+  const overallB = calculateOverall(teamB);
+
+  const avg = (overallA + overallB) / 2 || 1;
+  const diff = Math.abs(overallA - overallB);
+  const percent = Math.round((diff / avg) * 100);
+
+  return { overallA, overallB, diff, percent };
+}
+
+  function updateBalanceWarning(draft){
+  const warning = document.getElementById("balanceWarning");
+  const { percent } = getBalanceInfo(draft.teams.A, draft.teams.B);
+
+  warning.className =
+    "mt-4 px-6 py-3 rounded-2xl font-extrabold text-lg transition-all duration-300";
+
+  if (percent < 5){
+    warning.classList.add("hidden");
+    return;
+  }
+
+  warning.classList.remove("hidden");
+
+  if (percent < 10){
+    warning.textContent = `⚠️ Atenção: times começando a desbalancear (${percent}%)`;
+    warning.classList.add(
+      "bg-yellow-400/20",
+      "text-yellow-300",
+      "border",
+      "border-yellow-400"
+    );
+  } 
+  else if (percent < 15){
+    warning.textContent = `🚨 Desbalanceamento claro (${percent}%)`;
+    warning.classList.add(
+      "bg-orange-400/20",
+      "text-orange-300",
+      "border",
+      "border-orange-400"
+    );
+  } 
+  else {
+    warning.textContent = `❌ Muito desbalanceado (${percent}%)`;
+    warning.classList.add(
+      "bg-red-500/20",
+      "text-red-400",
+      "border",
+      "border-red-500",
+      "animate-pulse"
+    );
+  }
+}
 
 function renderDraft(draft){
 
@@ -261,7 +319,9 @@ function renderDraft(draft){
     status.textContent=`Prontos: ${(draft.playersStarted||[]).join(" e ")||"nenhum"}`;
   }else{
     status.textContent=`Vez do Time ${draft.currentPick}`;
+    updateBalanceWarning(draft);
   }
+  
 
   const pool=document.getElementById("playersPool");
   pool.innerHTML="";
@@ -353,7 +413,7 @@ document.getElementById("startBtn").onclick = async () => {
   clickSound.play();
 
   if (bgMusic.paused) {
-    bgMusic.play();
+    bgMusic.play().catch(()=>{});
   }
   
   const snap = await getDoc(draftRef);
@@ -394,5 +454,6 @@ onSnapshot(draftRef,snap=>renderDraft(snap.data()));
 
 </body>
 </html>
+
 
 

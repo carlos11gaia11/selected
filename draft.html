@@ -46,6 +46,7 @@ Draft CMIM
 Aguardando confirmação dos capitães...
 </p>
 
+
 <button id="startBtn"
 class="px-8 py-3 rounded-2xl font-extrabold text-black
 bg-gradient-to-r from-yellow-400 to-yellow-600
@@ -101,6 +102,8 @@ class="rounded-3xl p-5 bg-white/10 border border-white/10 transition-all duratio
 </div>
 </main>
 
+
+
 <footer class="bg-black/70 backdrop-blur-xl border-t border-white/10
 text-center py-4 text-sm text-zinc-400">
 CMIM © 2025 • Insalubramente competitivo
@@ -131,6 +134,10 @@ let lastPick = null;
 const clickSound = new Audio("click.mp3");
 const pickSound = new Audio("pick.mp3");
 const finishSound = new Audio("finish.mp3");
+
+const bgMusic = new Audio("musica.mp3");
+bgMusic.volume = 0.05; // 5% do volume
+bgMusic.loop = true;
 
 /* CORES POR LANE */
 const laneColors = {
@@ -344,6 +351,11 @@ document.getElementById("overallB").textContent =
 
 document.getElementById("startBtn").onclick = async () => {
   clickSound.play();
+
+  if (bgMusic.paused) {
+    bgMusic.play();
+  }
+  
   const snap = await getDoc(draftRef);
   const draft = snap.data();
 

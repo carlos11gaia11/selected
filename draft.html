@@ -293,7 +293,7 @@ async function pickPlayer(name){
     );
   } 
   else {
-    warning.textContent = `❌ Karalho! Tu é burro? olha quem time porco tu ta fazendo (${percent}%)`;
+    warning.textContent = `❌ Tu é burro? olha o time que tu ta fazendo! (${percent}%)`;
     warning.classList.add(
       "bg-red-500/20",
       "text-red-400",
@@ -459,6 +459,7 @@ onSnapshot(draftRef,snap=>renderDraft(snap.data()));
 
 </body>
 </html>
+
 
 
 

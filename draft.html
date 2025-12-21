@@ -275,7 +275,7 @@ async function pickPlayer(name){
   warning.classList.remove("hidden");
 
   if (percent < 10){
-    warning.textContent = `⚠️ Atenção: times começando a desbalancear (${percent}%)`;
+    warning.textContent = `⚠️ Atenção: Diferença aceitavel de balanceamento (${percent}%)`;
     warning.classList.add(
       "bg-yellow-400/20",
       "text-yellow-300",
@@ -284,7 +284,7 @@ async function pickPlayer(name){
     );
   } 
   else if (percent < 15){
-    warning.textContent = `🚨 Desbalanceamento claro (${percent}%)`;
+    warning.textContent = `🚨 Ta fazendo time com a bunda? (${percent}%)`;
     warning.classList.add(
       "bg-orange-400/20",
       "text-orange-300",
@@ -293,7 +293,7 @@ async function pickPlayer(name){
     );
   } 
   else {
-    warning.textContent = `❌ Muito desbalanceado (${percent}%)`;
+    warning.textContent = `❌ Karalho! Tu é burro? olha quem time porco tu ta fazendo (${percent}%)`;
     warning.classList.add(
       "bg-red-500/20",
       "text-red-400",
@@ -454,6 +454,7 @@ onSnapshot(draftRef,snap=>renderDraft(snap.data()));
 
 </body>
 </html>
+
 
 
 
